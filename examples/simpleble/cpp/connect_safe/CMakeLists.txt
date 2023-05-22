@@ -9,4 +9,5 @@ add_executable(example_connect_safe
     ../common/utils.cpp
 )
 
+add_subdirectory(/home/matter/workspace/SimpleBLE/simpleble ${CMAKE_BINARY_DIR}/simpleble)
 target_link_libraries(example_connect_safe simpleble::simpleble)

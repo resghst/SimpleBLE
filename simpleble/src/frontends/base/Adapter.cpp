@@ -7,6 +7,7 @@
 using namespace SimpleBLE;
 
 std::vector<Adapter> Adapter::get_adapters() {
+    SIMPLEBLE_LOG_INFO("INFO: HANKPPPPPPPPPPPPPPPPPPPP\n");
     std::vector<Adapter> available_adapters;
     auto internal_adapters = AdapterBase::get_adapters();
 
