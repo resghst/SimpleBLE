@@ -16,8 +16,8 @@
 
 // #define DEVICE_NAME "RT584"
 #define DEVICE_NAME "CITIZEN BPM CH681"
-#define SCAN_DELAY 50
-#define CONN_DELAY 15
+#define SCAN_DELAY 5
+#define CONN_DELAY 5
 
 #define BLOOD_PRESSURE "00001810-0000-1000-8000-00805f9b34fb"
 #define BLOOD_PRESSURE_MEASUREMENT "00002a35-0000-1000-8000-00805f9b34fb"
@@ -141,6 +141,7 @@ void pass_BP_data(SimpleBLE::ByteArray& bytes) {
 bool add_deviced=0;
 bool no_conn_dev =true;
 void add_device(){
+    std::cout<< "add_device"<< std::endl;
     std::vector<SimpleBLE::Safe::Peripheral> peripherals;
     adapter->set_callback_on_scan_found(
         [&](SimpleBLE::Safe::Peripheral peripheral) {peripherals.push_back(peripheral);});
@@ -156,12 +157,12 @@ void add_device(){
                 if (strcmp(&(peripherals[i].identifier().value_or("UNKNOWN"))[0], DEVICE_NAME) == 0){
                     std::cout << "Found: " << DEVICE_NAME << " [" << peripherals[i].address().value_or("UNKNOWN") << "]" << std::endl;
                     std::cout << "Connecting to " << peripherals[i].identifier().value_or("UNKNOWN") << std::endl;
-                    // peripherals[i].set_callback_on_connected([](){
-                    //     no_conn_dev=false;
-                    //     std::cout << "connected" << std::endl;});
-                    // peripherals[i].set_callback_on_disconnected([](){
-                    //     add_deviced=true;
-                    //     std::cout << "disconnected" << std::endl;});
+                    peripherals[i].set_callback_on_connected([](){
+                        no_conn_dev=false;
+                        std::cout << "connected" << std::endl;});
+                    peripherals[i].set_callback_on_disconnected([](){
+                        add_deviced=true;
+                        std::cout << "disconnected" << std::endl;});
                     bool connect_was_successful = peripherals[i].connect();
                     if (!connect_was_successful) {
                         std::cout << "Failed to connect to " << peripherals[i].identifier().value_or("UNKNOWN") << " ["
@@ -185,7 +186,14 @@ void add_device(){
                             }
                         }
                     }
-                    // sleep(CONN_DELAY);
+                    auto paired = peripherals[i].is_paired();
+                    std::cout << "paired " << paired.value()<<std::endl;
+                    while (!paired.value())
+                    {
+                        std::cout << "paired " << paired.value() <<std::endl;
+                        sleep(1);
+                        paired = peripherals[i].is_paired();
+                    }
                     peripherals[i].disconnect();
                     peripherals.clear();
                     return ;
@@ -204,6 +212,7 @@ void fetch_BP(){
 
     while (1)
     {
+        std::cout << "Start scan BP device (Scan 5 seconds)" << std::endl;
         adapter->scan_for(5000); // Scan for 5 seconds and return.
         for (size_t i = 0; i < peripherals.size(); i++) {
             if (strcmp(&(peripherals[i].identifier().value_or("UNKNOWN"))[0], DEVICE_NAME) == 0){
@@ -247,16 +256,22 @@ void fetch_BP(){
                                 std::cout << "Peripheral " << i << " received: ";
                                 // Utils::print_byte_array(bytes);
                                 pass_BP_data(bytes);
-                                peripherals[i].disconnect();
                                 indicated = true;
                         });
                     }
                 }
-                while (!indicated) { sleep(1); }
+                auto connected = peripherals[i].is_connected();
+                while (connected.value()) { 
+                    sleep(1);
+                    std::cout << "connected " << connected.value() <<std::endl;
+                    connected = peripherals[i].is_connected();
+                }
+                peripherals[i].disconnect();
                 peripherals.clear();
                 break;
             }
             peripherals.clear();
+            std::cout << "Back to scan BP device" << std::endl;
         }
         sleep(SCAN_DELAY);
     }
@@ -287,6 +302,13 @@ void trigger_bluetooth(int adapter_idx, bool add_device_flag){
 
     adapter = &adapter_list->at(adapter_idx);
     if(add_device_flag){
+        auto paired_list = adapter->get_paired_peripherals();
+        for(auto paired : *paired_list){
+            if (strcmp(&(paired.identifier().value_or("UNKNOWN"))[0], DEVICE_NAME) == 0){
+                std::cout << "Found unpair device: " << &(paired.identifier().value_or("UNKNOWN"))[0] << std::endl << std::endl;
+                paired.unpair();
+            }
+        }
         add_device();
     }
     fetch_BP();
@@ -299,7 +321,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     int adapter_idx = atoi(argv[1]);
-    bool add_device_flag = argv[2];
+    bool add_device_flag = atoi(argv[2]);
     trigger_bluetooth(adapter_idx, add_device_flag);
     
 }
