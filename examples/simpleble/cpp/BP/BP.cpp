@@ -153,6 +153,7 @@ void add_device(){
     {
         if(no_conn_dev){
             adapter->scan_for(5000); // Scan for 5 seconds and return.
+            sleep(5);
             for (size_t i = 0; i < peripherals.size(); i++) {
                 if (strcmp(&(peripherals[i].identifier().value_or("UNKNOWN"))[0], DEVICE_NAME) == 0){
                     std::cout << "Found: " << DEVICE_NAME << " [" << peripherals[i].address().value_or("UNKNOWN") << "]" << std::endl;
@@ -187,10 +188,11 @@ void add_device(){
                         }
                     }
                     auto paired = peripherals[i].is_paired();
-                    std::cout << "paired " << paired.value()<<std::endl;
+                    std::cout << "Waiting device pairing. (waiting for more than 30 seconds, please clean bluez cache.)"<<std::endl;
+                    int count = 0;
                     while (!paired.value())
                     {
-                        std::cout << "paired " << paired.value() <<std::endl;
+                        if(count!=0 && count%5==0){std::cout << "current waiting time " << paired.value() << " s" << std::endl;}
                         sleep(1);
                         paired = peripherals[i].is_paired();
                     }
@@ -214,6 +216,7 @@ void fetch_BP(){
     {
         std::cout << "Start scan BP device (Scan 5 seconds)" << std::endl;
         adapter->scan_for(5000); // Scan for 5 seconds and return.
+        sleep(1);
         for (size_t i = 0; i < peripherals.size(); i++) {
             if (strcmp(&(peripherals[i].identifier().value_or("UNKNOWN"))[0], DEVICE_NAME) == 0){
                 std::cout << "Found: " << DEVICE_NAME << " [" << peripherals[i].address().value_or("UNKNOWN") << "]" << std::endl;
@@ -261,9 +264,11 @@ void fetch_BP(){
                     }
                 }
                 auto connected = peripherals[i].is_connected();
+                std::cout << "Waiting indication"<<std::endl;
+                int count = 0;
                 while (connected.value()) { 
                     sleep(1);
-                    std::cout << "connected " << connected.value() <<std::endl;
+                    // std::cout << "connected " << connected.value() <<std::endl;
                     connected = peripherals[i].is_connected();
                 }
                 peripherals[i].disconnect();
@@ -290,17 +295,19 @@ void trigger_bluetooth(int adapter_idx, bool add_device_flag){
     // }
 
     std::cout << "Available adapters: " << std::endl;
-    int i = 0;
+    int i = 0, tar = -1;
     for (auto& adapter : *adapter_list) {
         std::cout << "[" << i++ << "] " << adapter.identifier().value() << " [" << adapter.address().value() << "]"
                   << std::endl;
+        if(adapter_idx==adapter.identifier().value()){ tar = i; }
+        
     }
     std::cout << "Select Index " << adapter_idx << std::endl;
 
     // auto adapter_selection = Utils::getUserInputInt("Please select an adapter", adapter_list->size() - 1);
     // if (!adapter_selection.has_value()) { exit(1); }
 
-    adapter = &adapter_list->at(adapter_idx);
+    adapter = &adapter_list->at(tar);
     if(add_device_flag){
         auto paired_list = adapter->get_paired_peripherals();
         for(auto paired : *paired_list){
