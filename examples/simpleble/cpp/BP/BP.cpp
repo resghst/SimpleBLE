@@ -16,8 +16,8 @@
 
 // #define DEVICE_NAME "RT584"
 #define DEVICE_NAME "CITIZEN BPM CH681"
-#define SCAN_DELAY 5
-#define CONN_DELAY 5
+#define SCAN_DELAY 2
+#define CONN_DELAY 2
 
 #define BLOOD_PRESSURE "00001810-0000-1000-8000-00805f9b34fb"
 #define BLOOD_PRESSURE_MEASUREMENT "00002a35-0000-1000-8000-00805f9b34fb"
@@ -192,8 +192,9 @@ void add_device(){
                     int count = 0;
                     while (!paired.value())
                     {
-                        if(count!=0 && count%5==0){std::cout << "current waiting time " << paired.value() << " s" << std::endl;}
+                        if(count!=0 && count%5==0){std::cout << "current waiting time " << count << " s" << std::endl;}
                         sleep(1);
+                        count++;
                         paired = peripherals[i].is_paired();
                     }
                     peripherals[i].disconnect();
@@ -297,12 +298,12 @@ void trigger_bluetooth(int adapter_idx, bool add_device_flag){
     std::cout << "Available adapters: " << std::endl;
     int i = 0, tar = -1;
     for (auto& adapter : *adapter_list) {
-        std::cout << "[" << i++ << "] " << adapter.identifier().value() << " [" << adapter.address().value() << "]"
+        std::cout << "[" << i << "] " << adapter.identifier().value() << " [" << adapter.address().value() << "]"
                   << std::endl;
-        if(adapter_idx==adapter.identifier().value()){ tar = i; }
-        
+        if(adapter_idx==atoi((adapter.identifier().value()).c_str() )){ tar = i; }
+        i++;        
     }
-    std::cout << "Select Index " << adapter_idx << std::endl;
+    std::cout << "Select hci" << adapter_idx << std::endl;
 
     // auto adapter_selection = Utils::getUserInputInt("Please select an adapter", adapter_list->size() - 1);
     // if (!adapter_selection.has_value()) { exit(1); }
