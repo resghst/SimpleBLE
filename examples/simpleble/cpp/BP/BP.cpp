@@ -217,7 +217,7 @@ void fetch_BP(){
     {
         std::cout << "Start scan BP device (Scan 5 seconds)" << std::endl;
         adapter->scan_for(5000); // Scan for 5 seconds and return.
-        sleep(1);
+        sleep(5);
         for (size_t i = 0; i < peripherals.size(); i++) {
             if (strcmp(&(peripherals[i].identifier().value_or("UNKNOWN"))[0], DEVICE_NAME) == 0){
                 std::cout << "Found: " << DEVICE_NAME << " [" << peripherals[i].address().value_or("UNKNOWN") << "]" << std::endl;

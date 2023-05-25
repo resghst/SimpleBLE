@@ -9,5 +9,10 @@ add_executable(example_bp
     ../common/utils.cpp
 )
 
-add_subdirectory(/home/matter/workspace/SimpleBLE/simpleble ${CMAKE_BINARY_DIR}/simpleble)
+set_target_properties(example_bp PROPERTIES
+    CXX_STANDARD 17
+)
+
+
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../../../../simpleble ${CMAKE_BINARY_DIR}/simpleble)
 target_link_libraries(example_bp simpleble::simpleble)
