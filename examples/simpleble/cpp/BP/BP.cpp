@@ -143,8 +143,9 @@ bool no_conn_dev =true;
 void add_device(){
     std::cout<< "add_device"<< std::endl;
     std::vector<SimpleBLE::Safe::Peripheral> peripherals;
-    adapter->set_callback_on_scan_found(
-        [&](SimpleBLE::Safe::Peripheral peripheral) {peripherals.push_back(peripheral);});
+    adapter->set_callback_on_scan_found([&](SimpleBLE::Safe::Peripheral peripheral) {
+        if (strcmp(&(peripheral.identifier().value_or("UNKNOWN"))[0], DEVICE_NAME) == 0){ peripherals.push_back(peripheral); }
+    });
     // adapter->set_callback_on_scan_start([](){std::cout << "Scan started." << std::endl;});
     // adapter->set_callback_on_scan_stop([](){std::cout << "Scan stopped." << std::endl;});
     add_deviced=0;
@@ -211,7 +212,9 @@ void add_device(){
 void fetch_BP(){
     std::cout<< "start fetch BP"<< std::endl;
     std::vector<SimpleBLE::Safe::Peripheral> peripherals;
-    adapter->set_callback_on_scan_found([&](SimpleBLE::Safe::Peripheral peripheral) {peripherals.push_back(peripheral);});
+    adapter->set_callback_on_scan_found([&](SimpleBLE::Safe::Peripheral peripheral) {
+        if (strcmp(&(peripheral.identifier().value_or("UNKNOWN"))[0], DEVICE_NAME) == 0){ peripherals.push_back(peripheral); }
+    });
 
     while (1)
     {
